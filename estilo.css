@@ -13,7 +13,7 @@ body{
 }
 
 .container {
-    background-color: #c48383; /* Un color más suave que el aqua */
+    background-color: #83b4c4; /* Un color más suave que el aqua */
     padding: 10px 0;
 }
 
@@ -38,4 +38,61 @@ nav ul li a {
 .link-del-logo{
     font-size: 20px;
     color: white;
+}
+
+/*Esta es la parte mas importante del proyecto*/
+
+main {
+    background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(./Imagenes/bosque.jpg);
+    background-size: cover;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.registro {
+    background-color: rgba(255, 255, 255, 0.1); /* Fondo semitransparente para que se vea el texto */
+    backdrop-filter: blur(5px);
+    border: 2px solid white;
+    border-radius: 15px;
+    padding: 40px;
+    width: 300px;
+    text-align: left; /* Alinea los labels a la izquierda */
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+input {
+    width: 100%; /* Que ocupen todo el ancho del cuadro */
+    padding: 10px;
+    border: 2px solid #c5c5c5;
+    border-radius: 8px;
+    outline: none;
+}
+
+.btn-registro {
+    width: 100%;
+    padding: 10px;
+    background-color: #83b4c4;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-registro:hover {
+    background-color: #6a96a5;
 }
