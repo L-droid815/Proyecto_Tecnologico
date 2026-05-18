@@ -52,6 +52,27 @@ main {
     justify-content: center;
 }
 
+/*Esta es la parte de los botones de continuar con Google, facebook*/
+
+.botones {
+    display: flex;
+    flex-direction: column; /* Alinea los hijos verticalmente */
+    gap: 10px;              /* Agrega una separación entre cada botón */
+    margin-bottom: 20px;    /* Espacio entre los botones y el formulario */
+    width: 300px;           /* Para que midan lo mismo que el formulario */
+}
+
+.botones button {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid white;
+    background-color: white;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;            /* Asegura que ocupen todo el ancho del contenedor */
+}
+
+
 .registro {
     background-color: rgba(255, 255, 255, 0.1); /* Fondo semitransparente para que se vea el texto */
     backdrop-filter: blur(5px);
@@ -80,6 +101,8 @@ input {
     border-radius: 8px;
     outline: none;
 }
+
+/*Esta es la parte de los botones del registro*/
 
 .btn-registro {
     width: 100%;

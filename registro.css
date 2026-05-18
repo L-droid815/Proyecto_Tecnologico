@@ -1,0 +1,27 @@
+body{
+    /* 1. Cargamos la imagen de fondo */
+    background-image: url("./Imagenes/logo del colegio Simon bolivar.jpg");
+    
+    /* 2. Centramos la imagen y evitamos que se repita en mosaico */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain; /* O 'cover' si quieres que ocupe toda la pantalla */
+    
+    /* 3. Fijamos la imagen para que no se mueva al hacer scroll */
+    background-attachment: fixed;
+    
+    /* 4. El truco principal: Una capa de color blanco semi-transparente 
+          encima del fondo para suavizar el logo y que el texto sea legible */
+    background-blend-mode: overlay;
+    background-color: rgba(255, 255, 255, 0.85); 
+}
+
+table {
+    border-collapse: separate; /* Permite la separación de bordes */
+    border-spacing: 0 10px; /* 0px en horizontal, 10px de separación vertical */
+}
+
+td {
+    background-color: rgba(255, 255, 255, 0.5); /* Opcional: les da un fondo para notar la separación */
+    padding: 8px;
+}
