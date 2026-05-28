@@ -1,0 +1,92 @@
+body {
+    background-color: #000000;
+    background-image: url("./Imagenes/logo del colegio Simon bolivar.jpg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
+    background-attachment: fixed;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    margin-top: 40px;
+    margin-bottom: 10px;
+}
+
+/* Contenedores Flexbox alignment */
+.contenedor-padre {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+.fila-tablas {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0px; /* Hace que se unan perfectamente */
+}
+
+/* Estilo general de las tablas */
+table {
+    border-collapse: collapse;
+    width: 220px; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    background-color: rgba(255, 255, 255, 0.90);
+}
+
+/* Manejo de bordes redondeados en los extremos */
+.columna-izquierda table {
+    border-radius: 8px 0 0 8px;
+    overflow: hidden;
+}
+
+.columna-centro table {
+    border-radius: 0; /* Totalmente recta en el centro */
+}
+
+.columna-derecha table {
+    border-radius: 0 8px 8px 0;
+    overflow: hidden;
+}
+
+/* Encabezados */
+th {
+    background-color: #1e3a8a;
+    color: white;
+    font-weight: 600;
+    padding: 12px 16px;
+    text-align: left;
+}
+
+/* Celdas */
+td {
+    padding: 10px 16px;
+    color: #333333;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+/* Efecto Cebra */
+tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Efecto Hover */
+tbody tr:hover {
+    background-color: rgba(30, 58, 138, 0.08);
+}
+
+/*Esta es la parte donde el encabezado de la tabla de segundo b
+va de color rojo*/
+
+.encabezado-1, .encabezado-2{
+    color: #a8a8a8;
+}
+
