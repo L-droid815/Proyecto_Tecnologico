@@ -1,18 +1,126 @@
-// ==========================================
-    // 2. LÓGICA DE LAS TABLAS (index2.htm)
-    // ==========================================
-    // Escuchar clics en los botones de "Agregar Estudiante"
-    const botonesAgregar = document.querySelectorAll(".btn-agregar-estudiante");
-    
-    botonesAgregar.forEach(boton => {
-        boton.addEventListener("click", (e) => {
-            // Buscamos el contenedor padre de la sección específica (Primero A o Segundo B)
-            const contenedorPadre = e.target.closest("h1, div").nextElementSibling; 
-            const filaTablas = contenedorPadre.querySelector(".fila-tablas");
-            
-            if (!filaTablas) return;
+// ==========================================================
+// LÓGICA DE LAS TABLAS CON PERSISTENCIA (LocalStorage)
+// ==========================================================
 
-            // Pedir los datos al usuario
+// Configuración de las secciones para mapear los títulos H1 con sus respectivos contenedores
+const secciones = [
+    { selectorH1: ".encabezado-1", storageKey: "estudiantes_primero_a" }, // Primero A
+    { selectorH1: ".encabezado-2", storageKey: "estudiantes_primero_b" }, // Primero B
+    { selectorH1: ".encabezado-3", storageKey: "estudiantes_segundo_a" }, // Segundo A
+    { selectorH1: ".encabezado-2 ~ .encabezado-2", storageKey: "estudiantes_segundo_b" } // Segundo B (segundo h1 con esa clase)
+];
+
+// Función principal para inicializar todo el sistema al cargar la página
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarSecciones();
+    configurarBotonesAgregar();
+});
+
+// 1. CARGAR Y RENDERIZAR LOS ESTUDIANTES GUARDADOS
+function inicializarSecciones() {
+    // Buscamos todos los contenedores de tablas en orden
+    const contenedoresPadre = document.querySelectorAll(".contenedor-padre");
+
+    secciones.forEach((seccion, index) => {
+        const contenedor = contenedoresPadre[index];
+        if (!contenedor) return;
+
+        // Intentar obtener estudiantes desde LocalStorage
+        let estudiantes = JSON.parse(localStorage.getItem(seccion.storageKey)) || [];
+
+        // Si la sección está vacía en LocalStorage por primera vez, extraemos los que ya pusiste en el HTML base
+        if (estudiantes.length === 0) {
+            estudiantes = extraerEstudiantesDeHTML(contenedor);
+            // Guardamos los predeterminados para que ya queden en el almacenamiento
+            if (estudiantes.length > 0) {
+                localStorage.setItem(seccion.storageKey, JSON.stringify(estudiantes));
+            }
+        }
+
+        // Renderizar las tablas de esta sección con los datos actualizados
+        renderizarTablas(contenedor, estudiantes, seccion.storageKey);
+    });
+}
+
+// Función auxiliar para leer los datos que ya escribiste fijamente en el archivo .htm
+function extraerEstudiantesDeHTML(contenedor) {
+    const lista = [];
+    const filasNombre = contenedor.querySelectorAll(".columna-izquierda tbody tr");
+    const filasApellido = contenedor.querySelectorAll(".columna-centro tbody tr");
+    const filasGenero = contenedor.querySelectorAll(".columna-derecha tbody tr");
+
+    filasNombre.forEach((fila, i) => {
+        const nombre = fila.innerText.trim();
+        const apellido = filasApellido[i] ? filasApellido[i].innerText.trim() : "";
+        const genero = filasGenero[i] ? filasGenero[i].innerText.trim() : "";
+        
+        if (nombre !== "") {
+            lista.push({
+                id: Date.now() + i, // Genera un ID único temporal
+                nombre: nombre,
+                apellido: apellido,
+                genero: genero
+            });
+        }
+    });
+    return lista;
+}
+
+// 2. RENDERIZAR LAS TABLAS DINÁMICAMENTE
+function renderizarTablas(contenedor, listaEstudiantes, storageKey) {
+    const tbodyNombre = contenedor.querySelector(".columna-izquierda tbody");
+    const tbodyApellido = contenedor.querySelector(".columna-centro tbody");
+    const tbodyGenero = contenedor.querySelector(".columna-derecha tbody");
+
+    // Limpiamos los contenidos anteriores para evitar duplicados
+    tbodyNombre.innerHTML = "";
+    tbodyApellido.innerHTML = "";
+    tbodyGenero.innerHTML = "";
+
+    // Insertamos fila por fila manteniendo la perfecta sincronía visual
+    listaEstudiantes.forEach(estudiante => {
+        const trN = document.createElement("tr");
+        trN.innerHTML = `<td>${estudiante.nombre}</td>`;
+        trN.style.cursor = "pointer";
+        trN.title = "Haz doble clic para eliminar a este estudiante";
+
+        const trA = document.createElement("tr");
+        trA.innerHTML = `<td>${estudiante.apellido}</td>`;
+        trA.style.cursor = "pointer";
+        trA.title = "Haz doble clic para eliminar a este estudiante";
+
+        const trG = document.createElement("tr");
+        trG.innerHTML = `<td>${estudiante.genero}</td>`;
+        trG.style.cursor = "pointer";
+        trG.title = "Haz doble clic para eliminar a este estudiante";
+
+        // Asignar el evento de eliminación por doble clic a las tres celdas por igual
+        [trN, trA, trG].forEach(tr => {
+            tr.addEventListener("dblclick", () => {
+                eliminarEstudiante(estudiante.id, estudiante.nombre, estudiante.apellido, storageKey, contenedor);
+            });
+        });
+
+        tbodyNombre.appendChild(trN);
+        tbodyApellido.appendChild(trA);
+        tbodyGenero.appendChild(trG);
+    });
+}
+
+// 3. CONFIGURAR LOS BOTONES PARA AGREGAR ESTUDIANTES
+function configurarBotonesAgregar() {
+    const botonesAgregar = document.querySelectorAll(".btn-agregar-estudiante");
+
+    botonesAgregar.forEach((boton, index) => {
+        boton.addEventListener("click", () => {
+            // Identificar qué sección estamos modificando según el orden del botón presionado
+            const seccion = secciones[index];
+            const contenedoresPadre = document.querySelectorAll(".contenedor-padre");
+            const contenedor = contenedoresPadre[index];
+
+            if (!seccion || !contenedor) return;
+
+            // Solicitar datos al usuario
             const nombre = prompt("Ingrese el Nombre del estudiante:");
             if (!nombre || nombre.trim() === "") return;
 
@@ -22,74 +130,40 @@
             const genero = prompt("Ingrese el Género (Masculino / Femenino):");
             if (!genero || genero.trim() === "") return;
 
-            // Obtener los cuerpos (tbody) de las tres tablas correspondientes
-            const tbodyNombre = filaTablas.querySelector(".columna-izquierda tbody");
-            const tbodyApellido = filaTablas.querySelector(".columna-centro tbody");
-            const tbodyGenero = filaTablas.querySelector(".columna-derecha tbody");
-
-            // Crear las filas simultáneamente para mantener la sincronía
-            const trNombre = document.createElement("tr");
-            trNombre.innerHTML = `<td>${nombre}</td>`;
-
-            const trApellido = document.createElement("tr");
-            trApellido.innerHTML = `<td>${apellido}</td>`;
-
-            const trGenero = document.createElement("tr");
-            trGenero.innerHTML = `<td>${genero}</td>`;
-
-            // Vincular de forma invisible las tres filas para eliminarlas juntas después
-            trNombre.dataset.idCompuesto = trApellido.dataset.idCompuesto = trGenero.dataset.idCompuesto = Date.now();
-
-            // Insertar los elementos a sus respectivas tablas
-            tbodyNombre.appendChild(trNombre);
-            tbodyApellido.appendChild(trApellido);
-            tbodyGenero.appendChild(trGenero);
+            // Obtener lista actual, agregar el nuevo objeto y guardar
+            let estudiantes = JSON.parse(localStorage.getItem(seccion.storageKey)) || [];
             
-            // Volver a aplicar la lógica de eliminación para las nuevas celdas
-            asignarEventosEliminar();
+            const nuevoEstudiante = {
+                id: Date.now(), // ID único basado en milisegundos
+                nombre: nombre.trim(),
+                apellido: apellido.trim(),
+                genero: genero.trim()
+            };
+
+            estudiantes.push(nuevoEstudiante);
+            localStorage.setItem(seccion.storageKey, JSON.stringify(estudiantes));
+
+            // Volver a renderizar la sección para reflejar los cambios de inmediato
+            renderizarTablas(contenedor, estudiantes, seccion.storageKey);
         });
     });
+}
 
-    // Función para eliminar filas de forma sincronizada
-    function asignarEventosEliminar() {
-        const todasLasFilas = document.querySelectorAll(".fila-tablas tbody tr");
+// 4. SCRIPT/FUNCIÓN PARA ELIMINAR ESTUDIANTES
+function eliminarEstudiante(id, nombre, apellido, storageKey, contenedor) {
+    const confirmacion = confirm(`¿Estás seguro de que deseas eliminar al estudiante "${nombre} ${apellido}"?`);
+    
+    if (confirmacion) {
+        // Traer datos actuales
+        let estudiantes = JSON.parse(localStorage.getItem(storageKey)) || [];
         
-        todasLasFilas.forEach(fila => {
-            // Clonamos el nodo para evitar duplicar listeners viejos
-            const filaNueva = fila.cloneNode(true);
-            fila.parentNode.replaceChild(filaNueva, fila);
-
-            // Añadir evento al pasar el cursor para avisar al usuario
-            filaNueva.style.cursor = "pointer";
-            filaNueva.title = "Haz doble clic para eliminar a este estudiante";
-
-            // Evento: Al hacer doble clic se borra el registro completo en las 3 columnas
-            filaNueva.addEventListener("dblclick", () => {
-                const idUnico = filaNueva.dataset.idCompuesto;
-                const confirmacion = confirm("¿Estás seguro de que deseas eliminar este estudiante?");
-                
-                if (confirmacion) {
-                    if (idUnico) {
-                        // Si es un alumno nuevo, borramos los tres campos que comparten id
-                        const celdasRelacionadas = document.querySelectorAll(`[data-id-compuesto="${idUnico}"]`);
-                        celdasRelacionadas.forEach(c => c.remove());
-                    } else {
-                        // Si es un alumno predeterminado por HTML, borramos el índice de la fila
-                        const index = Array.from(filaNueva.parentNode.children).indexOf(filaNueva);
-                        const contenedorFilaTablas = filaNueva.closest(".fila-tablas");
-                        
-                        const tbodyIzq = contenedorFilaTablas.querySelector(".columna-izquierda tbody");
-                        const tbodyCen = contenedorFilaTablas.querySelector(".columna-centro tbody");
-                        const tbodyDer = contenedorFilaTablas.querySelector(".columna-derecha tbody");
-
-                        if(tbodyIzq.children[index]) tbodyIzq.children[index].remove();
-                        if(tbodyCen.children[index]) tbodyCen.children[index].remove();
-                        if(tbodyDer.children[index]) tbodyDer.children[index].remove();
-                    }
-                }
-            });
-        });
+        // Filtrar la lista dejando fuera al estudiante que coincida con el ID seleccionado
+        estudiantes = estudiantes.filter(estudiante => estudiante.id !== id);
+        
+        // Guardar la nueva lista en LocalStorage
+        localStorage.setItem(storageKey, JSON.stringify(estudiantes));
+        
+        // Volver a dibujar las tablas de ese contenedor específico
+        renderizarTablas(contenedor, estudiantes, storageKey);
     }
-
-    // Inicializar eventos de eliminación al cargar la página por primera vez
-    asignarEventosEliminar();
+}
