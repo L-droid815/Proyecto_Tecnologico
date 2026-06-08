@@ -17,29 +17,6 @@ body{
     padding: 10px 0;
 }
 
-.menu-container {
-    display: flex;
-    justify-content: space-between; /* Empuja el logo a la izquierda y el nav a la derecha */
-    align-items: center;           /* Centra verticalmente ambos elementos */
-    padding: 20px 50px;
-}
-
-nav ul {
-    display: flex;
-    gap: 20px;
-}
-
-nav ul li a {
-    color: white;
-    text-decoration: none;
-}
-
-
-.link-del-logo{
-    font-size: 20px;
-    color: white;
-}
-
 /*Esta es la parte mas importante del proyecto*/
 
 main {
