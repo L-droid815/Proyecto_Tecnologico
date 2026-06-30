@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 pantallaRegistro.style.display = "none";
                 pantallaTablas.style.display = "block";
                 
-                // Quitamos el fondo de bosque del body si así se prefiere para ver el fondo de style.css
+                // Cambiamos el fondo
                 document.body.style.backgroundImage = 'url("./Imagenes/logo del colegio Simon bolivar.jpg")';
                 
                 // Inicializamos las tablas
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // ==========================================================================
-// 2. LÓGICA DE LAS TABLAS CON PERSISTENCIA (Tu código original adaptado)
+// 2. LÓGICA DE LAS TABLAS CON PERSISTENCIA Y MODIFICACIONES
 // ==========================================================================
 
 const secciones = [
@@ -119,11 +119,13 @@ function inicializarSecciones() {
 
 function extraerEstudiantesDeHTML(contenedor) {
     const lista = [];
+    const filasCedula = contenedor.querySelectorAll(".columna-cedula tbody tr");
     const filasNombre = contenedor.querySelectorAll(".columna-izquierda tbody tr");
     const filasApellido = contenedor.querySelectorAll(".columna-centro tbody tr");
     const filasGenero = contenedor.querySelectorAll(".columna-derecha tbody tr");
 
     filasNombre.forEach((fila, i) => {
+        const cedula = filasCedula[i] ? filasCedula[i].innerText.trim() : "V-00.000.000";
         const nombre = fila.innerText.trim();
         const apellido = filasApellido[i] ? filasApellido[i].innerText.trim() : "";
         const genero = filasGenero[i] ? filasGenero[i].innerText.trim() : "";
@@ -131,6 +133,7 @@ function extraerEstudiantesDeHTML(contenedor) {
         if (nombre !== "") {
             lista.push({
                 id: Date.now() + i,
+                cedula: cedula,
                 nombre: nombre,
                 apellido: apellido,
                 genero: genero
@@ -141,36 +144,46 @@ function extraerEstudiantesDeHTML(contenedor) {
 }
 
 function renderizarTablas(contenedor, listaEstudiantes, storageKey) {
+    const tbodyCedula = contenedor.querySelector(".columna-cedula tbody");
     const tbodyNombre = contenedor.querySelector(".columna-izquierda tbody");
     const tbodyApellido = contenedor.querySelector(".columna-centro tbody");
     const tbodyGenero = contenedor.querySelector(".columna-derecha tbody");
 
+    // Limpiar todos los cuerpos de tabla
+    if (tbodyCedula) tbodyCedula.innerHTML = "";
     tbodyNombre.innerHTML = "";
     tbodyApellido.innerHTML = "";
     tbodyGenero.innerHTML = "";
 
     listaEstudiantes.forEach(estudiante => {
+        const trC = document.createElement("tr");
+        trC.innerHTML = `<td>${estudiante.cedula}</td>`;
+        trC.style.cursor = "pointer";
+        trC.title = "Doble clic para gestionar (Editar cédula / Eliminar)";
+
         const trN = document.createElement("tr");
         trN.innerHTML = `<td>${estudiante.nombre}</td>`;
         trN.style.cursor = "pointer";
-        trN.title = "Haz doble clic para eliminar a este estudiante";
+        trN.title = "Doble clic para gestionar (Editar cédula / Eliminar)";
 
         const trA = document.createElement("tr");
         trA.innerHTML = `<td>${estudiante.apellido}</td>`;
         trA.style.cursor = "pointer";
-        trA.title = "Haz doble clic para eliminar a este estudiante";
+        trA.title = "Doble clic para gestionar (Editar cédula / Eliminar)";
 
         const trG = document.createElement("tr");
         trG.innerHTML = `<td>${estudiante.genero}</td>`;
         trG.style.cursor = "pointer";
-        trG.title = "Haz doble clic para eliminar a este estudiante";
+        trG.title = "Doble clic para gestionar (Editar cédula / Eliminar)";
 
-        [trN, trA, trG].forEach(tr => {
+        // Evento de doble clic compartido
+        [trC, trN, trA, trG].forEach(tr => {
             tr.addEventListener("dblclick", () => {
-                eliminarEstudiante(estudiante.id, estudiante.nombre, estudiante.apellido, storageKey, contenedor);
+                gestionarEstudiante(estudiante, storageKey, contenedor);
             });
         });
 
+        if (tbodyCedula) tbodyCedula.appendChild(trC);
         tbodyNombre.appendChild(trN);
         tbodyApellido.appendChild(trA);
         tbodyGenero.appendChild(trG);
@@ -180,7 +193,6 @@ function renderizarTablas(contenedor, listaEstudiantes, storageKey) {
 function configurarBotonesAgregar() {
     const botonesAgregar = document.querySelectorAll(".btn-agregar-estudiante");
 
-    // Removemos event listeners previos para evitar ejecuciones duplicadas
     botonesAgregar.forEach((boton, index) => {
         const clonBoton = boton.cloneNode(true);
         boton.parentNode.replaceChild(clonBoton, boton);
@@ -191,6 +203,10 @@ function configurarBotonesAgregar() {
             const contenedor = contenedoresPadre[index];
 
             if (!seccion || !contenedor) return;
+
+            // 1. Pedir Cédula primero
+            const cedula = prompt("Ingrese la Cédula del estudiante (Ejemplo: V-123.456.789):");
+            if (!cedula || cedula.trim() === "") return;
 
             const nombre = prompt("Ingrese el Nombre del estudiante:");
             if (!nombre || nombre.trim() === "") return;
@@ -205,6 +221,7 @@ function configurarBotonesAgregar() {
             
             const nuevoEstudiante = {
                 id: Date.now(),
+                cedula: cedula.trim(),
                 nombre: nombre.trim(),
                 apellido: apellido.trim(),
                 genero: genero.trim()
@@ -218,13 +235,38 @@ function configurarBotonesAgregar() {
     });
 }
 
-function eliminarEstudiante(id, nombre, apellido, storageKey, contenedor) {
-    const confirmacion = confirm(`¿Estás seguro de que deseas eliminar al estudiante "${nombre} ${apellido}"?`);
-    
-    if (confirmacion) {
-        let estudiantes = JSON.parse(localStorage.getItem(storageKey)) || [];
-        estudiantes = estudiantes.filter(estudiante => estudiante.id !== id);
-        localStorage.setItem(storageKey, JSON.stringify(estudiantes));
-        renderizarTablas(contenedor, estudiantes, storageKey);
+// Nueva función interactiva para Editar o Eliminar
+function gestionarEstudiante(estudiante, storageKey, contenedor) {
+    const opcion = prompt(
+        `Estudiante: ${estudiante.nombre} ${estudiante.apellido}\n` +
+        `Cédula actual: ${estudiante.cedula}\n\n` +
+        `Escriba "1" para EDITAR la cédula.\n` +
+        `Escriba "2" para ELIMINAR al estudiante.\n` +
+        `Deje vacío o cancele para salir.`
+    );
+
+    if (opcion === "1") {
+        const nuevaCedula = prompt("Ingrese la nueva cédula (Ejemplo: V-123.456.789):", estudiante.cedula);
+        if (nuevaCedula && nuevaCedula.trim() !== "") {
+            let estudiantes = JSON.parse(localStorage.getItem(storageKey)) || [];
+            estudiantes = estudiantes.map(est => {
+                if (est.id === estudiante.id) {
+                    est.cedula = nuevaCedula.trim();
+                }
+                return est;
+            });
+            localStorage.setItem(storageKey, JSON.stringify(estudiantes));
+            renderizarTablas(contenedor, estudiantes, storageKey);
+            alert("Cédula modificada con éxito.");
+        }
+    } else if (opcion === "2") {
+        const confirmacion = confirm(`¿Estás seguro de que deseas eliminar a "${estudiante.nombre} ${estudiante.apellido}" con Cédula ${estudiante.cedula}?`);
+        if (confirmacion) {
+            let estudiantes = JSON.parse(localStorage.getItem(storageKey)) || [];
+            estudiantes = estudiantes.filter(est => est.id !== estudiante.id);
+            localStorage.setItem(storageKey, JSON.stringify(estudiantes));
+            renderizarTablas(contenedor, estudiantes, storageKey);
+            alert("Estudiante eliminado con éxito.");
+        }
     }
 }
